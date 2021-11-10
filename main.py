@@ -29,7 +29,7 @@ for i in types:
     DATA_DIR = Path(osp.join(path, i))
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-
+s_num = 0
 
 # === Camera process === # 
 print("******  Camera Loading...  ******", end="\n ")
@@ -78,11 +78,12 @@ try:
         elif key == ord('v'): # press 'v' 
             print("Recording start...")
             record = True 
-
-            cam1_rgb_title = f"c1_rgb_{spec.cls_name}_{spec.ID}_{spec.scene}"
-            cam2_rgb_title = f"c2_rgb_{spec.cls_name}_{spec.ID}_{spec.scene}"
-            cam1_depth_title = f"c1_depth_{spec.cls_name}_{spec.ID}_{spec.scene}"
-            cam2_depth_title = f"c2_depth_{spec.cls_name}_{spec.ID}_{spec.scene}"            
+            s_num += 1
+            
+            cam1_rgb_title = f"c1_rgb_{spec.cls_name}_{spec.ID}_s{s_num:04}"
+            cam2_rgb_title = f"c2_rgb_{spec.cls_name}_{spec.ID}_s{s_num:04}"
+            cam1_depth_title = f"c1_depth_{spec.cls_name}_{spec.ID}_s{s_num:04}"
+            cam2_depth_title = f"c2_depth_{spec.cls_name}_{spec.ID}_s{s_num:04}"            
 
             video1_rgb = cv2.VideoWriter(f"{osp.join(path,types[0] , cam1_rgb_title)}.mp4", fourcc, 30.0, (color_image_1.shape[1], color_image_1.shape[0]), 1)
             video2_rgb = cv2.VideoWriter(f"{osp.join(path,types[0] , cam2_rgb_title)}.mp4", fourcc, 30.0, (color_image_2.shape[1], color_image_2.shape[0]), 1)
@@ -105,6 +106,8 @@ try:
             video2_rgb.write(color_image_2)      
             video1_depth.write(depth_colormap_1)  
             video2_depth.write(depth_colormap_2)  
+            
+
 
 
 
