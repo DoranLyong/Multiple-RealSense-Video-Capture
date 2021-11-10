@@ -29,7 +29,7 @@ for i in types:
     DATA_DIR = Path(osp.join(path, i))
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-s_num = 0
+s_num = 0  # scene number 
 
 # === Camera process === # 
 print("******  Camera Loading...  ******", end="\n ")
