@@ -17,7 +17,9 @@
 * Check the ```config.yaml``` (you can change whenever you need). 
 * Run the code:
     ```bash
-    python two-realsense.py
+    python two-realsense.py  # for two camera devices 
+    # or 
+    python single-realsense.py # for one camera device 
     ```
 * Control by your keyboard
     * 'v' button - to record your video 
@@ -28,9 +30,9 @@
 
 ## Demo 
 
-* Reference to [align-depth2color.py](https://github.com/IntelRealSense/librealsense/blob/master/wrappers/python/examples/align-depth2color.py) for depth and color alignment & distance clipping. 
+* Reference to [align-depth2color.py](https://github.com/IntelRealSense/librealsense/blob/master/wrappers/python/examples/align-depth2color.py) for depth and color ```alignment``` & ```distance clipping```. 
 
-* Run the demo code with single realsense camera: 
+* For understanding how it works, run the demo code with single realsense camera: 
 
   ```
   python demo.py 
