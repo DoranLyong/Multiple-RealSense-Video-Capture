@@ -47,21 +47,34 @@ pipeline_2.start(config_2)
 
 try:
     while True:
+
+        color_maps = [cv2.COLORMAP_JET, cv2.COLORMAP_RAINBOW, cv2.COLORMAP_BONE]
+
         # === Camera 1 === # 
         color_image_1, depth_image_1 = getFrames(pipeline_1)        
-        depth_colormap_1 = cv2.applyColorMap( cv2.convertScaleAbs(depth_image_1, alpha=0.5), 
-                                              cv2.COLORMAP_JET) # Apply colormap on depth image (image must be converted to 8-bit per pixel first)
+        depth_colormap_1 = cv2.applyColorMap( cv2.convertScaleAbs(depth_image_1, alpha=0.03), 
+                                              color_maps[0]) # Apply colormap on depth image (image must be converted to 8-bit per pixel first)
         # === Camera 2 === #
         color_image_2, depth_image_2 = getFrames(pipeline_2)
-        depth_colormap_2 = cv2.applyColorMap( cv2.convertScaleAbs(depth_image_2, alpha=0.5), 
-                                              cv2.COLORMAP_JET)
+        depth_colormap_2 = cv2.applyColorMap( cv2.convertScaleAbs(depth_image_2, alpha=0.03), 
+                                              color_maps[2])
+
+
+        print(depth_colormap_2.max())
+
+
 
         # Stack all images horizontally
-        images = np.hstack((color_image_1, depth_colormap_1,color_image_2, depth_colormap_2))
+        cam1_images = np.hstack((color_image_1, depth_colormap_1))
+        cam2_images = np.hstack((color_image_2, depth_colormap_2))
+        images = np.vstack((cam1_images, cam2_images))
 
         # Show images from both cameras
         cv2.namedWindow('RealSense', cv2.WINDOW_NORMAL)
         cv2.imshow('RealSense', images)
+
+        cv2.imshow("depth", depth_image_1)
+
         key = cv2.waitKey(1)
 
 
