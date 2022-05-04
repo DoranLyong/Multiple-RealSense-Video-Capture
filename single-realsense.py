@@ -32,7 +32,7 @@ record = False
 cfg = OmegaConf.load('config.yaml')
 spec = cfg.SPEC
 path = osp.join('data', spec.cls_name, spec.ID)
-types = ['rgb', 'depth']
+types = ['rgb', 'depth', 'IR']
 
 for i in types:
     print(path)
@@ -60,8 +60,7 @@ set_maps = color_maps[0]
 try: 
     while True: 
         # === Camera 1 === # 
-        color_image, depth_image = getFrames(pipeline, *options)
-
+        color_image, depth_image, leftIR_image, rightIR_image = getFrames(pipeline, *options)
 
         # Render depth image for visualization: 
         # ------------------------------------
@@ -72,9 +71,15 @@ try:
         # --------------                       
         blended_img = cv2.addWeighted(color_image, 0.5, depth_colormap, 1, 0)
 
+
+        # Convert grayscale IR image to 3-channel image 
+        # -------------------------------------------
+        leftIR_image = cv2.cvtColor(leftIR_image, cv2.COLOR_GRAY2BGR)
+        rightIR_image = cv2.cvtColor(rightIR_image, cv2.COLOR_GRAY2BGR)
+        
         # Stack all images horizontally
         # -----------------------------
-        images = np.hstack((color_image, depth_colormap, blended_img))
+        images = np.hstack((color_image, depth_colormap, blended_img, leftIR_image, rightIR_image))
 
         # Show images from cameras 
         cv2.namedWindow('Example', cv2.WINDOW_NORMAL)
@@ -99,11 +104,13 @@ try:
             record = True 
             s_num += 1
 
-            cam_rgb_title = f"c1_rgb_{spec.cls_name}_{spec.ID}_s{s_num:04}"
-            cam_depth_title = f"c1_depth_{spec.cls_name}_{spec.ID}_s{s_num:04}"
+            cam_title = {img_type:f"c1_{img_type}_{spec.cls_name}_{spec.ID}_s{s_num:04}" for img_type in types}
+            print(cam_title.keys())
 
-            video_rgb = cv2.VideoWriter(f"{osp.join(path,types[0] , cam_rgb_title)}.mp4", fourcc, 30.0, (color_image.shape[1], color_image.shape[0]), 1)
-            video_depth = cv2.VideoWriter(f"{osp.join(path,types[1], cam_depth_title)}.mp4", fourcc, 30.0, (depth_colormap.shape[1], depth_colormap.shape[0]), 1)
+            video_rgb = cv2.VideoWriter(f"{osp.join(path,types[0] , cam_title['rgb'])}.mp4", fourcc, 30.0, (color_image.shape[1], color_image.shape[0]), 1)
+            video_depth = cv2.VideoWriter(f"{osp.join(path,types[1], cam_title['depth'])}.mp4", fourcc, 30.0, (depth_colormap.shape[1], depth_colormap.shape[0]), 1)
+            video_leftIR = cv2.VideoWriter(f"{osp.join(path,types[2] , cam_title['IR'])}.mp4", fourcc, 30.0, (leftIR_image.shape[1], leftIR_image.shape[0]), 1)
+
 
         elif key == 32: # press 'SPACE' 
             print("Recording stop...")
@@ -111,13 +118,14 @@ try:
 
             video_rgb.release()
             video_depth.release()
+            video_leftIR.release()
+
 
         if record == True: 
             print("Video recording...")
             video_rgb.write(color_image)        
             video_depth.write(depth_colormap)  
-            
-
+            video_leftIR.write(leftIR_image)
 
 finally:
     # Stop streaming

@@ -10,6 +10,8 @@ def getCamera(device_serial:str):
     config.enable_device(device_serial)
     config.enable_stream(rs.stream.depth, 640, 480, rs.format.z16, 30)
     config.enable_stream(rs.stream.color, 640, 480, rs.format.bgr8, 30)
+    config.enable_stream(rs.stream.infrared, 1, 640, 480, rs.format.y8, 30) # Left IR 
+    config.enable_stream(rs.stream.infrared, 2, 640, 480, rs.format.y8, 30) # Right IR 
 
     return pipeline, config 
 
@@ -43,6 +45,8 @@ def getFrames(pipeline, *options):
     # ----------
     depth_frame = frames.get_depth_frame()
     color_frame = frames.get_color_frame()
+    leftIR_frame = frames.get_infrared_frame(1) # (ref) https://community.intel.com/t5/Items-with-no-label/How-to-show-d435-IR-image-using-python-wrapper-pyrealsense2/td-p/545526
+    rightIR_frame = frames.get_infrared_frame(2)
 
     if not depth_frame or not color_frame:
         print(f"depth_frame:{depth_frame}, color_frame:{color_frame}")
@@ -52,6 +56,8 @@ def getFrames(pipeline, *options):
     # ------------------------------
     depth_img = np.asanyarray(depth_frame.get_data())
     color_img = np.asanyarray(color_frame.get_data())
+    leftIR_img = np.asanyarray(leftIR_frame.get_data())
+    rightIR_img = np.asanyarray(rightIR_frame.get_data())
 
 
     if clipping_distance:
@@ -59,7 +65,7 @@ def getFrames(pipeline, *options):
         grey_color = 153
         depth_img = np.where((depth_img> clipping_distance) | (depth_img <= 0), grey_color, depth_img)
 
-    return color_img, depth_img
+    return color_img, depth_img, leftIR_img, rightIR_img
 
     
 def depth_options(profile, clipping_dist=1.5): 
