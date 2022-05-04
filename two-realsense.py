@@ -4,6 +4,7 @@
 import logging
 from pathlib import Path 
 import os.path as osp
+import argparse 
 
 import numpy as np 
 import cv2 
@@ -11,6 +12,18 @@ from omegaconf import OmegaConf
 import pyrealsense2 as rs
 
 from utils import getDeviceSerial, getCamera, getFrames, depth_options
+
+
+# === Argparse === # 
+
+parser = argparse.ArgumentParser(description='Set depth distance option.')
+parser.add_argument('--clip', type=float, default=1.5,
+                    help='distance clipping value (meter)')
+parser.add_argument('--alpha', type=float, default=0.03,
+                    help='OpenCV ColorMap alpha')
+
+args = parser.parse_args()
+print(args)
 
 
 # === Video setting === # 
@@ -44,7 +57,7 @@ pipeline_2, config_2 = getCamera(serial_list[1])
 profile_1 = pipeline_1.start(config_1)
 profile_2 = pipeline_2.start(config_2)
 
-clipping_distance, align = depth_options(profile_1, clipping_dist=1.5)
+clipping_distance, align = depth_options(profile_1, clipping_dist=args.clip)
 options = [clipping_distance, align]# if not want 'clipping_distance', 'align',
                                     # set [None, None]. 
 
@@ -58,11 +71,11 @@ try:
 
         # === Camera 1 === # 
         color_image_1, depth_image_1 = getFrames(pipeline_1, *options)        
-        depth_colormap_1 = cv2.applyColorMap( cv2.convertScaleAbs(depth_image_1, alpha=0.1), 
+        depth_colormap_1 = cv2.applyColorMap( cv2.convertScaleAbs(depth_image_1, alpha=args.alpha), 
                                               set_maps) # Apply colormap on depth image (image must be converted to 8-bit per pixel first)
         # === Camera 2 === #
         color_image_2, depth_image_2 = getFrames(pipeline_2, *options)
-        depth_colormap_2 = cv2.applyColorMap( cv2.convertScaleAbs(depth_image_2, alpha=0.1), 
+        depth_colormap_2 = cv2.applyColorMap( cv2.convertScaleAbs(depth_image_2, alpha=args.alpha), 
                                               set_maps)
 
         # Image blending                      
