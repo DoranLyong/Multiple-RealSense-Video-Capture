@@ -2,6 +2,16 @@
 
 
 
+![](./imgs/sample_single_realsense.png)
+
+(RGB, distance-clipped depth, aligned depth, left IR, right IR)
+
+
+
+
+
+
+
 ## Installation 
 
 * Please be sure to install [Intel RealSense SDK](https://github.com/IntelRealSense/librealsense/releases).
