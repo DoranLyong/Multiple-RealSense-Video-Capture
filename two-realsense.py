@@ -86,7 +86,7 @@ try:
         # Convert grayscale IR image to 3-channel image 
         # -------------------------------------------
         leftIR_image_1 = cv2.cvtColor(leftIR_image_1, cv2.COLOR_GRAY2BGR)
-        leftIR_image_2 = cv2.cvtColor(leftIR_image_1, cv2.COLOR_GRAY2BGR)
+        leftIR_image_2 = cv2.cvtColor(leftIR_image_2, cv2.COLOR_GRAY2BGR)
 
 
 
@@ -119,11 +119,9 @@ try:
             record = True 
             s_num += 1
 
-            for cam_id in ['c1', 'c2']: 
-                cam_title = {f"{cam_id}_{img_type}":f"{cam_id}_{img_type}_{spec.cls_name}_{spec.ID}_s{s_num:04}" for img_type in types}
+            cam_title = {f"{cam_id}_{img_type}":f"{cam_id}_{img_type}_{spec.cls_name}_{spec.ID}_s{s_num:04}" for img_type in types for cam_id in ['c1', 'c2']}
             print(cam_title.keys())
             
-
             video1_rgb = cv2.VideoWriter(f"{osp.join(path,types[0] , cam_title['c1_rgb'])}.mp4", fourcc, 30.0, (color_image_1.shape[1], color_image_1.shape[0]), 1)
             video2_rgb = cv2.VideoWriter(f"{osp.join(path,types[0] , cam_title['c2_rgb'])}.mp4", fourcc, 30.0, (color_image_2.shape[1], color_image_2.shape[0]), 1)
 
