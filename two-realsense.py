@@ -35,7 +35,7 @@ record = False
 cfg = OmegaConf.load('config.yaml')
 spec = cfg.SPEC
 path = osp.join('data', spec.cls_name, spec.ID)
-types = ['rgb', 'depth']
+types = ['rgb', 'depth', 'IR']
 
 for i in types:
     print(path)
@@ -70,24 +70,29 @@ try:
     while True:
 
         # === Camera 1 === # 
-        color_image_1, depth_image_1 = getFrames(pipeline_1, *options)        
-        depth_colormap_1 = cv2.applyColorMap( cv2.convertScaleAbs(depth_image_1, alpha=args.alpha), 
-                                              set_maps) # Apply colormap on depth image (image must be converted to 8-bit per pixel first)
+        color_image_1, depth_image_1, leftIR_image_1, rightIR_image_1 = getFrames(pipeline_1, *options)        
+        depth_colormap_1 = cv2.applyColorMap(   cv2.convertScaleAbs(depth_image_1, alpha=args.alpha), 
+                                                set_maps) # Apply colormap on depth image (image must be converted to 8-bit per pixel first)
         # === Camera 2 === #
-        color_image_2, depth_image_2 = getFrames(pipeline_2, *options)
-        depth_colormap_2 = cv2.applyColorMap( cv2.convertScaleAbs(depth_image_2, alpha=args.alpha), 
-                                              set_maps)
+        color_image_2, depth_image_2, leftIR_image_2, rightIR_image_2 = getFrames(pipeline_2, *options)
+        depth_colormap_2 = cv2.applyColorMap(   cv2.convertScaleAbs(depth_image_2, alpha=args.alpha), 
+                                                set_maps)
 
         # Image blending                      
         # --------------                       
         blended_img_1 = cv2.addWeighted(color_image_1, 0.5, depth_colormap_1, 1, 0)
         blended_img_2 = cv2.addWeighted(color_image_2, 0.5, depth_colormap_2, 1, 0)
 
+        # Convert grayscale IR image to 3-channel image 
+        # -------------------------------------------
+        leftIR_image_1 = cv2.cvtColor(leftIR_image_1, cv2.COLOR_GRAY2BGR)
+        leftIR_image_2 = cv2.cvtColor(leftIR_image_1, cv2.COLOR_GRAY2BGR)
+
 
 
         # Stack all images horizontally
-        cam1_images = np.hstack((color_image_1, depth_colormap_1, blended_img_1))
-        cam2_images = np.hstack((color_image_2, depth_colormap_2, blended_img_2))
+        cam1_images = np.hstack((color_image_1, depth_colormap_1, blended_img_1, leftIR_image_1 ))
+        cam2_images = np.hstack((color_image_2, depth_colormap_2, blended_img_2, leftIR_image_2 ))
         images = np.vstack((cam1_images, cam2_images))
 
         # Show images from both cameras
@@ -113,16 +118,20 @@ try:
             print("Recording start...")
             record = True 
             s_num += 1
-            
-            cam1_rgb_title = f"c1_rgb_{spec.cls_name}_{spec.ID}_s{s_num:04}"
-            cam2_rgb_title = f"c2_rgb_{spec.cls_name}_{spec.ID}_s{s_num:04}"
-            cam1_depth_title = f"c1_depth_{spec.cls_name}_{spec.ID}_s{s_num:04}"
-            cam2_depth_title = f"c2_depth_{spec.cls_name}_{spec.ID}_s{s_num:04}"            
 
-            video1_rgb = cv2.VideoWriter(f"{osp.join(path,types[0] , cam1_rgb_title)}.mp4", fourcc, 30.0, (color_image_1.shape[1], color_image_1.shape[0]), 1)
-            video2_rgb = cv2.VideoWriter(f"{osp.join(path,types[0] , cam2_rgb_title)}.mp4", fourcc, 30.0, (color_image_2.shape[1], color_image_2.shape[0]), 1)
-            video1_depth = cv2.VideoWriter(f"{osp.join(path,types[1], cam1_depth_title)}.mp4", fourcc, 30.0, (depth_colormap_1.shape[1], depth_colormap_1.shape[0]), 1)
-            video2_depth = cv2.VideoWriter(f"{osp.join(path,types[1], cam2_depth_title)}.mp4", fourcc, 30.0, (depth_colormap_2.shape[1], depth_colormap_2.shape[0]), 1)
+            for cam_id in ['c1', 'c2']: 
+                cam_title = {f"{cam_id}_{img_type}":f"{cam_id}_{img_type}_{spec.cls_name}_{spec.ID}_s{s_num:04}" for img_type in types}
+            print(cam_title.keys())
+            
+
+            video1_rgb = cv2.VideoWriter(f"{osp.join(path,types[0] , cam_title['c1_rgb'])}.mp4", fourcc, 30.0, (color_image_1.shape[1], color_image_1.shape[0]), 1)
+            video2_rgb = cv2.VideoWriter(f"{osp.join(path,types[0] , cam_title['c2_rgb'])}.mp4", fourcc, 30.0, (color_image_2.shape[1], color_image_2.shape[0]), 1)
+
+            video1_depth = cv2.VideoWriter(f"{osp.join(path,types[1], cam_title['c1_depth'])}.mp4", fourcc, 30.0, (depth_colormap_1.shape[1], depth_colormap_1.shape[0]), 1)
+            video2_depth = cv2.VideoWriter(f"{osp.join(path,types[1], cam_title['c2_depth'])}.mp4", fourcc, 30.0, (depth_colormap_2.shape[1], depth_colormap_2.shape[0]), 1)
+
+            video1_leftIR = cv2.VideoWriter(f"{osp.join(path,types[2], cam_title['c1_IR'])}.mp4", fourcc, 30.0, (leftIR_image_1.shape[1], leftIR_image_1.shape[0]), 1)
+            video2_leftIR = cv2.VideoWriter(f"{osp.join(path,types[2], cam_title['c2_IR'])}.mp4", fourcc, 30.0, (leftIR_image_2.shape[1], leftIR_image_2.shape[0]), 1)
 
 
         elif key == 32: # press 'SPACE' 
@@ -133,13 +142,20 @@ try:
             video2_rgb.release()
             video1_depth.release()
             video2_depth.release()
+            video1_leftIR.release()
+            video2_leftIR.release()
+
 
         if record == True: 
             print("Video recording...")
             video1_rgb.write(color_image_1)        
             video2_rgb.write(color_image_2)      
+
             video1_depth.write(depth_colormap_1)  
             video2_depth.write(depth_colormap_2)  
+
+            video1_leftIR.write(leftIR_image_1)
+            video2_leftIR.write(leftIR_image_2)
             
 
 
