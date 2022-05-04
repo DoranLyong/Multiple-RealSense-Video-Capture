@@ -17,9 +17,9 @@
 * Check the ```config.yaml``` (you can change whenever you need). 
 * Run the code:
     ```bash
-    python two-realsense.py  # for two camera devices 
+    python two-realsense.py --clip 2.0 --alpha 0.1  # for two camera devices 
     # or 
-    python single-realsense.py # for one camera device 
+    python single-realsense.py --clip 2.0 --alpha 0.1 # for one camera device 
     ```
 * Control by your keyboard
     * 'v' button - to record your video 

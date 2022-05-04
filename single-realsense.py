@@ -1,6 +1,7 @@
 import logging
 from pathlib import Path 
 import os.path as osp
+import argparse 
 
 import numpy as np 
 import cv2 
@@ -8,6 +9,19 @@ from omegaconf import OmegaConf
 import pyrealsense2 as rs
 
 from utils import getDeviceSerial, getCamera, getFrames, depth_options
+
+
+# === Argparse === # 
+
+parser = argparse.ArgumentParser(description='Set depth distance option.')
+parser.add_argument('--clip', type=float, default=1.5,
+                    help='distance clipping value (meter)')
+parser.add_argument('--alpha', type=float, default=0.03,
+                    help='OpenCV ColorMap alpha')
+
+args = parser.parse_args()
+print(args)
+
 
 # === Video setting === # 
 fourcc = cv2.VideoWriter_fourcc(*'MP4V')
@@ -36,7 +50,7 @@ pipeline, config = getCamera(serial_list[0])
 # Start streaming from your realsense camera
 profile = pipeline.start(config)
 
-clipping_distance, align = depth_options(profile, clipping_dist=1.5)
+clipping_distance, align = depth_options(profile, clipping_dist=args.clip)
 options = [clipping_distance, align]# if not want 'clipping_distance', 'align',
                                     # set [None, None]. 
 
@@ -51,7 +65,7 @@ try:
 
         # Render depth image for visualization: 
         # ------------------------------------
-        depth_colormap = cv2.applyColorMap( cv2.convertScaleAbs(depth_image, alpha=0.03), 
+        depth_colormap = cv2.applyColorMap( cv2.convertScaleAbs(depth_image, alpha=args.alpha), 
                                             set_maps) # Apply colormap on depth image (image must be converted to 8-bit per pixel first)
 
         # Image blending                      
