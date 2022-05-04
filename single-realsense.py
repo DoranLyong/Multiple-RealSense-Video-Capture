@@ -1,0 +1,110 @@
+import logging
+from pathlib import Path 
+import os.path as osp
+
+import numpy as np 
+import cv2 
+from omegaconf import OmegaConf
+import pyrealsense2 as rs
+
+from utils import getDeviceSerial, getCamera, getFrames, depth_options
+
+# === Video setting === # 
+fourcc = cv2.VideoWriter_fourcc(*'MP4V')
+record = False
+
+
+# === File system setting === # 
+cfg = OmegaConf.load('config.yaml')
+spec = cfg.SPEC
+path = osp.join('data', spec.cls_name, spec.ID)
+types = ['rgb', 'depth']
+
+for i in types:
+    print(path)
+    DATA_DIR = Path(osp.join(path, i))
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+
+s_num = 0  # scene number 
+
+# === Camera process === # 
+print("******  Camera Loading...  ******", end="\n ")
+
+serial_list = getDeviceSerial()
+pipeline, config = getCamera(serial_list[0])
+
+# Start streaming from your realsense camera
+profile = pipeline.start(config)
+
+clipping_distance, align = depth_options(profile, clipping_dist=1.5)
+options = [clipping_distance, align]# if not want 'clipping_distance', 'align',
+                                    # set [None, None]. 
+
+color_maps = [cv2.COLORMAP_JET, cv2.COLORMAP_RAINBOW, cv2.COLORMAP_BONE]
+set_maps = color_maps[0]
+
+try: 
+    while True: 
+        # === Camera 1 === # 
+        color_image, depth_image = getFrames(pipeline, *options)
+
+
+        # Render depth image for visualization: 
+        # ------------------------------------
+        depth_colormap = cv2.applyColorMap( cv2.convertScaleAbs(depth_image, alpha=0.03), 
+                                            set_maps) # Apply colormap on depth image (image must be converted to 8-bit per pixel first)
+
+        # Image blending                      
+        # --------------                       
+        blended_img = cv2.addWeighted(color_image, 0.5, depth_colormap, 1, 0)
+
+        # Stack all images horizontally
+        # -----------------------------
+        images = np.hstack((color_image, depth_colormap, blended_img))
+
+        # Show images from cameras 
+        cv2.namedWindow('Example', cv2.WINDOW_NORMAL)
+        cv2.imshow('Example', images)
+        key = cv2.waitKey(1)
+
+
+        # Press esc or 'q' to close the image window
+        if key & 0xFF == ord('q') or key == 27:
+            cv2.destroyAllWindows()
+            break
+        
+        # Start: video capture signal
+        elif key == ord('s'): # press 's' key 
+            print("Capturing for image...")
+            
+            cam_rgb_title = f"c1_rgb_{spec.cls_name}_{spec.ID}_{spec.scene}"
+            cv2.imwrite(f"{osp.join(path,cam_rgb_title)}.jpg", color_image)
+
+        elif key == ord('v'): # press 'v' 
+            print("Recording start...")
+            record = True 
+            s_num += 1
+
+            cam_rgb_title = f"c1_rgb_{spec.cls_name}_{spec.ID}_s{s_num:04}"
+            cam_depth_title = f"c1_depth_{spec.cls_name}_{spec.ID}_s{s_num:04}"
+
+            video_rgb = cv2.VideoWriter(f"{osp.join(path,types[0] , cam_rgb_title)}.mp4", fourcc, 30.0, (color_image.shape[1], color_image.shape[0]), 1)
+            video_depth = cv2.VideoWriter(f"{osp.join(path,types[1], cam_depth_title)}.mp4", fourcc, 30.0, (depth_colormap.shape[1], depth_colormap.shape[0]), 1)
+
+        elif key == 32: # press 'SPACE' 
+            print("Recording stop...")
+            record = False 
+
+            video_rgb.release()
+            video_depth.release()
+
+        if record == True: 
+            print("Video recording...")
+            video_rgb.write(color_image)        
+            video_depth.write(depth_colormap)  
+            
+
+
+finally:
+    # Stop streaming
+    pipeline.stop()           

@@ -10,7 +10,7 @@ import cv2
 from omegaconf import OmegaConf
 import pyrealsense2 as rs
 
-from utils import getDeviceSerial, getCamera, getFrames
+from utils import getDeviceSerial, getCamera, getFrames, depth_options
 
 
 # === Video setting === # 
@@ -41,47 +41,55 @@ pipeline_2, config_2 = getCamera(serial_list[1])
 
 
 # Start streaming from both cameras
-pipeline_1.start(config_1)
-pipeline_2.start(config_2)
+profile_1 = pipeline_1.start(config_1)
+profile_2 = pipeline_2.start(config_2)
+
+clipping_distance, align = depth_options(profile_1, clipping_dist=1.5)
+options = [clipping_distance, align]# if not want 'clipping_distance', 'align',
+                                    # set [None, None]. 
+
+
+color_maps = [cv2.COLORMAP_JET, cv2.COLORMAP_RAINBOW, cv2.COLORMAP_BONE, cv2.COLORMAP_PINK]
+set_maps = color_maps[2]
 
 
 try:
     while True:
 
-        color_maps = [cv2.COLORMAP_JET, cv2.COLORMAP_RAINBOW, cv2.COLORMAP_BONE]
-
         # === Camera 1 === # 
-        color_image_1, depth_image_1 = getFrames(pipeline_1)        
-        depth_colormap_1 = cv2.applyColorMap( cv2.convertScaleAbs(depth_image_1, alpha=0.03), 
-                                              color_maps[0]) # Apply colormap on depth image (image must be converted to 8-bit per pixel first)
+        color_image_1, depth_image_1 = getFrames(pipeline_1, *options)        
+        depth_colormap_1 = cv2.applyColorMap( cv2.convertScaleAbs(depth_image_1, alpha=0.1), 
+                                              set_maps) # Apply colormap on depth image (image must be converted to 8-bit per pixel first)
         # === Camera 2 === #
-        color_image_2, depth_image_2 = getFrames(pipeline_2)
-        depth_colormap_2 = cv2.applyColorMap( cv2.convertScaleAbs(depth_image_2, alpha=0.03), 
-                                              color_maps[2])
+        color_image_2, depth_image_2 = getFrames(pipeline_2, *options)
+        depth_colormap_2 = cv2.applyColorMap( cv2.convertScaleAbs(depth_image_2, alpha=0.1), 
+                                              set_maps)
 
-
-        print(depth_colormap_2.max())
+        # Image blending                      
+        # --------------                       
+        blended_img_1 = cv2.addWeighted(color_image_1, 0.5, depth_colormap_1, 1, 0)
+        blended_img_2 = cv2.addWeighted(color_image_2, 0.5, depth_colormap_2, 1, 0)
 
 
 
         # Stack all images horizontally
-        cam1_images = np.hstack((color_image_1, depth_colormap_1))
-        cam2_images = np.hstack((color_image_2, depth_colormap_2))
+        cam1_images = np.hstack((color_image_1, depth_colormap_1, blended_img_1))
+        cam2_images = np.hstack((color_image_2, depth_colormap_2, blended_img_2))
         images = np.vstack((cam1_images, cam2_images))
 
         # Show images from both cameras
         cv2.namedWindow('RealSense', cv2.WINDOW_NORMAL)
         cv2.imshow('RealSense', images)
 
-        cv2.imshow("depth", depth_image_1)
-
         key = cv2.waitKey(1)
 
 
-        # Start: video capture signal
-        if key == 27 : # 'ESC 
-            break 
+        # Press esc or 'q' to close the image window
+        if key & 0xFF == ord('q') or key == 27: # ESC 
+            cv2.destroyAllWindows()
+            break
         
+        # Start: video capture signal
         elif key == ord('s'): # press 's' key 
             print("Capturing for image...")
             
