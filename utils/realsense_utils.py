@@ -90,3 +90,17 @@ def depth_options(profile, clipping_dist=1.5):
     return clipping_distance, align
 
 
+def emitter_options(profile, set_emitter = 1):
+    # remove 'dot patterns'; (ref) https://community.intel.com/t5/Items-with-no-label/How-to-enable-disable-emitter-through-python-wrapper/td-p/547900
+    device = profile.get_device() 
+    depth_sensor = device.query_sensors()[0]
+    emitter = depth_sensor.get_option(rs.option.emitter_enabled)
+    print("default emitter = ", emitter)
+
+    set_emitter = set_emitter
+    depth_sensor.set_option(rs.option.emitter_enabled, set_emitter)
+    emitter1 = depth_sensor.get_option(rs.option.emitter_enabled)
+    print("new emitter = ", emitter1)
+
+
+

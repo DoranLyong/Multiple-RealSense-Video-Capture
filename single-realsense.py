@@ -8,7 +8,7 @@ import cv2
 from omegaconf import OmegaConf
 import pyrealsense2 as rs
 
-from utils import getDeviceSerial, getCamera, getFrames, depth_options
+from utils import getDeviceSerial, getCamera, getFrames, depth_options, emitter_options
 
 
 # === Argparse === # 
@@ -53,6 +53,11 @@ profile = pipeline.start(config)
 clipping_distance, align = depth_options(profile, clipping_dist=args.clip)
 options = [clipping_distance, align]# if not want 'clipping_distance', 'align',
                                     # set [None, None]. 
+
+# Set dot-patterens for IR image 
+emitter_options(profile, set_emitter=0) # remove dot-patterns -> set_emitter=0
+                                        # else -> set_emitter=1 
+
 
 color_maps = [cv2.COLORMAP_JET, cv2.COLORMAP_RAINBOW, cv2.COLORMAP_BONE]
 set_maps = color_maps[0]
