@@ -36,6 +36,12 @@ clipping_distance = clipping_distance_in_meters / depth_scale
 align_to = rs.stream.color
 align = rs.align(align_to)
 
+# == PointCloud == # 
+# -----------------
+pc = rs.pointcloud() 
+points = rs.points()
+
+
 
 
 try: 
@@ -85,6 +91,9 @@ try:
         images = np.hstack((color_image, depth_colormap, blended_img, bg_removed_colormap))
         
 
+
+        
+
         
         # Show images from cameras 
         cv2.namedWindow('Align Example', cv2.WINDOW_NORMAL)
@@ -94,6 +103,17 @@ try:
         if key & 0xFF == ord('q') or key == 27:
             cv2.destroyAllWindows()
             break
+        
+        elif key == ord('s'): # press 's' key 
+            # PointCloud 
+            points = pc.calculate(aligned_depth_frame)
+            pc.map_to(color_frame)
+
+            
+            print("Saving to 1.ply...")
+            points.export_to_ply("1.ply", color_frame)
+            print("Done")
+
 
 
 finally:

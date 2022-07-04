@@ -48,4 +48,28 @@
   python demo.py 
   ```
 
-  
+
+
+
+## Notice 
+
+- [ ] Saving point cloud in `.ply`
+
+
+
+
+
+***
+
+### Reference 
+
+1. https://www.meshlab.net/
+
+2. [librealsense/pyglet_pointcloud_viewer.py](https://github.com/IntelRealSense/librealsense/blob/development/wrappers/python/examples/pyglet_pointcloud_viewer.py)
+
+3. [Save pointcloud (RGB) without meshing #7747](https://github.com/IntelRealSense/librealsense/issues/7747)
+
+4. [Aligning depth image (and pointcloud) to RGB image is slightly off in the vertical axis #5834](https://github.com/IntelRealSense/librealsense/issues/5834)
+
+   
+
