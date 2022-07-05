@@ -71,5 +71,7 @@
 
 4. [Aligning depth image (and pointcloud) to RGB image is slightly off in the vertical axis #5834](https://github.com/IntelRealSense/librealsense/issues/5834)
 
+5. [Pointcloud, how remove background? #8170](https://github.com/IntelRealSense/librealsense/issues/8170)
+
    
 

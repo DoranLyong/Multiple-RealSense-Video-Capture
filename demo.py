@@ -41,7 +41,9 @@ align = rs.align(align_to)
 pc = rs.pointcloud() 
 points = rs.points()
 
-
+threshold_filter = rs.threshold_filter()
+threshold_filter.set_option(rs.option.max_distance, 1.5)
+threshold_filter.set_option(rs.option.min_distance, 0.5)
 
 
 try: 
@@ -49,10 +51,10 @@ try:
         # === Camera 1 === # 
         # Get frameset of color and depth
         frames = pipeline_1.wait_for_frames()
-
+        
         # Align the depth frame to color frame
         aligned_frames = align.process(frames)
-
+        
 
         # Get aligned frames
         aligned_depth_frame = aligned_frames.get_depth_frame() # aligned_depth_frame is a 640x480 depth image
@@ -106,6 +108,7 @@ try:
         
         elif key == ord('s'): # press 's' key 
             # PointCloud 
+#            aligned_depth_frame= threshold_filter.process(aligned_depth_frame)
             points = pc.calculate(aligned_depth_frame)
             pc.map_to(color_frame)
 
